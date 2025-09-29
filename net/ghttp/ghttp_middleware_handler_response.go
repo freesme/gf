@@ -16,9 +16,9 @@ import (
 
 // DefaultHandlerResponse is the default implementation of HandlerResponse.
 type DefaultHandlerResponse struct {
-	Code    int         `json:"code"    dc:"Error code"`
-	Message string      `json:"message" dc:"Error message"`
-	Data    interface{} `json:"data"    dc:"Result data for certain request according API definition"`
+	Code    int    `json:"code"    dc:"Error code"`
+	Message string `json:"message" dc:"Error message"`
+	Data    any    `json:"data"    dc:"Result data for certain request according API definition"`
 }
 
 const (
@@ -37,7 +37,7 @@ func MiddlewareHandlerResponse(r *Request) {
 	r.Middleware.Next()
 
 	// There's custom buffer content, it then exits current handler.
-	if r.Response.BufferLength() > 0 {
+	if r.Response.BufferLength() > 0 || r.Response.BytesWritten() > 0 {
 		return
 	}
 
@@ -62,7 +62,6 @@ func MiddlewareHandlerResponse(r *Request) {
 		msg = err.Error()
 	} else {
 		if r.Response.Status > 0 && r.Response.Status != http.StatusOK {
-			msg = http.StatusText(r.Response.Status)
 			switch r.Response.Status {
 			case http.StatusNotFound:
 				code = gcode.CodeNotFound
@@ -71,12 +70,13 @@ func MiddlewareHandlerResponse(r *Request) {
 			default:
 				code = gcode.CodeUnknown
 			}
-			// It creates error as it can be retrieved by other middlewares.
+			// It creates an error as it can be retrieved by other middlewares.
 			err = gerror.NewCode(code, msg)
 			r.SetError(err)
 		} else {
 			code = gcode.CodeOK
 		}
+		msg = code.Message()
 	}
 
 	r.Response.WriteJson(DefaultHandlerResponse{

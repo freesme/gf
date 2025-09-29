@@ -34,7 +34,7 @@ func TestTables(t *testing.T) {
 	}
 	gtest.C(t, func(t *gtest.T) {
 		result, err := db.Tables(ctx)
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 
 		for i := 0; i < len(tables); i++ {
 			find := false
@@ -48,7 +48,7 @@ func TestTables(t *testing.T) {
 		}
 
 		result, err = dblink.Tables(ctx)
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 		for i := 0; i < len(tables); i++ {
 			find := false
 			for j := 0; j < len(result); j++ {
@@ -82,7 +82,7 @@ func TestTableFields(t *testing.T) {
 	tables := "A_tables"
 	createInitTable(tables)
 	gtest.C(t, func(t *gtest.T) {
-		var expect = map[string][]interface{}{
+		var expect = map[string][]any{
 			"ID":           {"BIGINT", false},
 			"ACCOUNT_NAME": {"VARCHAR", false},
 			"PWD_RESET":    {"TINYINT", false},
@@ -95,7 +95,7 @@ func TestTableFields(t *testing.T) {
 		gtest.AssertNE(err, nil)
 
 		res, err := db.TableFields(ctx, tables)
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 
 		for k, v := range expect {
 			_, ok := res[k]
@@ -205,7 +205,7 @@ func TestModelInsert(t *testing.T) {
 		}
 		// _, err := db.Schema(TestDBName).Model(table).Data(data).Insert()
 		_, err := db.Model(table).Insert(&data)
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
@@ -220,7 +220,7 @@ func TestModelInsert(t *testing.T) {
 		}
 		// _, err := db.Schema(TestDBName).Model(table).Data(data).Insert()
 		_, err := db.Model(table).Data(&data).Insert()
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 	})
 }
 
@@ -238,7 +238,7 @@ func TestDBInsert(t *testing.T) {
 			"UPDATED_TIME": gtime.Now(),
 		}
 		_, err := db.Insert(ctx, table, &data)
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 	})
 }
 
@@ -372,7 +372,7 @@ func Test_DB_BatchInsert(t *testing.T) {
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		// []interface{}
+		// []any
 		r, err := db.Insert(ctx, table, g.Slice{
 			g.Map{
 				"ID":           500,

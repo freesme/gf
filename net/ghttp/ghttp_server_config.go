@@ -318,7 +318,7 @@ func NewConfig() ServerConfig {
 
 // ConfigFromMap creates and returns a ServerConfig object with given map and
 // default configuration object.
-func ConfigFromMap(m map[string]interface{}) (ServerConfig, error) {
+func ConfigFromMap(m map[string]any) (ServerConfig, error) {
 	config := NewConfig()
 	if err := gconv.Struct(m, &config); err != nil {
 		return config, err
@@ -327,7 +327,7 @@ func ConfigFromMap(m map[string]interface{}) (ServerConfig, error) {
 }
 
 // SetConfigWithMap sets the configuration for the server using map.
-func (s *Server) SetConfigWithMap(m map[string]interface{}) error {
+func (s *Server) SetConfigWithMap(m map[string]any) error {
 	// The m now is a shallow copy of m.
 	// Any changes to m does not affect the original one.
 	// A little tricky, isn't it?
@@ -342,6 +342,9 @@ func (s *Server) SetConfigWithMap(m map[string]interface{}) error {
 	}
 	if k, v := gutil.MapPossibleItemByKey(m, "FormParsingMemory"); k != "" {
 		m[k] = gfile.StrToSize(gconv.String(v))
+	}
+	if _, v := gutil.MapPossibleItemByKey(m, "Logger"); v == nil {
+		intlog.Printf(context.TODO(), "SetConfigWithMap: set Logger nil")
 	}
 	// Update the current configuration object.
 	// It only updates the configured keys not all the object.
@@ -379,8 +382,10 @@ func (s *Server) SetConfig(c ServerConfig) error {
 			return err
 		}
 	}
-	if err := s.config.Logger.SetLevelStr(s.config.LogLevel); err != nil {
-		intlog.Errorf(context.TODO(), `%+v`, err)
+	if s.config.Logger != nil {
+		if err := s.config.Logger.SetLevelStr(s.config.LogLevel); err != nil {
+			intlog.Errorf(context.TODO(), `%+v`, err)
+		}
 	}
 	gracefulEnabled = c.Graceful
 	intlog.Printf(context.TODO(), "SetConfig: %+v", s.config)
@@ -399,6 +404,7 @@ func (s *Server) SetAddr(address string) {
 }
 
 // SetPort sets the listening ports for the server.
+// It uses random port if the port is 0.
 // The listening ports can be multiple like: SetPort(80, 8080).
 func (s *Server) SetPort(port ...int) {
 	if len(port) > 0 {
@@ -418,6 +424,7 @@ func (s *Server) SetHTTPSAddr(address string) {
 }
 
 // SetHTTPSPort sets the HTTPS listening ports for the server.
+// It uses random port if the port is 0.
 // The listening ports can be multiple like: SetHTTPSPort(443, 500).
 func (s *Server) SetHTTPSPort(port ...int) {
 	if len(port) > 0 {

@@ -19,8 +19,9 @@ import (
 type SchemaRefs []SchemaRef
 
 type SchemaRef struct {
-	Ref   string
-	Value *Schema
+	Ref         string
+	Description string
+	Value       *Schema
 }
 
 // isEmbeddedStructDefinition checks and returns whether given golang type is embedded struct definition, like:
@@ -54,7 +55,7 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 	)
 	if pkgPath == "" {
 		switch golangType.Kind() {
-		case reflect.Ptr, reflect.Array, reflect.Slice:
+		case reflect.Pointer, reflect.Array, reflect.Slice:
 			pkgPath = golangType.Elem().PkgPath()
 			typeName = golangType.Elem().Name()
 		default:
@@ -64,7 +65,7 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 	// Type enums.
 	var typeId = fmt.Sprintf(`%s.%s`, pkgPath, typeName)
 	if enums := gtag.GetEnumsByType(typeId); enums != "" {
-		schema.Enum = make([]interface{}, 0)
+		schema.Enum = make([]any, 0)
 		if err = json.Unmarshal([]byte(enums), &schema.Enum); err != nil {
 			return nil, err
 		}
@@ -127,7 +128,7 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 		}
 
 	case TypeObject:
-		for golangType.Kind() == reflect.Ptr {
+		for golangType.Kind() == reflect.Pointer {
 			golangType = golangType.Elem()
 		}
 		switch golangType.Kind() {
@@ -169,6 +170,7 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 				}
 				schemaRef.Ref = structTypeName
 				schemaRef.Value = schema
+				schemaRef.Description = schema.Description
 			}
 		}
 	}
@@ -177,7 +179,7 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 
 func (r SchemaRef) MarshalJSON() ([]byte, error) {
 	if r.Ref != "" {
-		return formatRefToBytes(r.Ref), nil
+		return formatRefAndDescToBytes(r.Ref, r.Description), nil
 	}
 	return json.Marshal(r.Value)
 }

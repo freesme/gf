@@ -52,7 +52,7 @@ func init() {
 
 	nodeLink := gdb.ConfigNode{
 		Type: "mssql",
-		Name: "test",
+		Name: "master",
 		Link: fmt.Sprintf(
 			"mssql:%s:%s@tcp(%s:%s)/%s?encrypt=disable",
 			node.User, node.Pass, node.Host, node.Port, node.Name,
@@ -61,7 +61,8 @@ func init() {
 
 	nodeErr := gdb.ConfigNode{
 		Type: "mssql",
-		Link: fmt.Sprintf("user id=%s;password=%s;server=%s;port=%s;database=%s;encrypt=disable",
+		Link: fmt.Sprintf(
+			"mssql:%s:%s@tcp(%s:%s)/%s?encrypt=disable",
 			node.User, "node.Pass", node.Host, node.Port, node.Name),
 	}
 
@@ -126,11 +127,11 @@ func createInitTable(table ...string) (name string) {
 			"passport":    fmt.Sprintf(`user_%d`, i),
 			"password":    fmt.Sprintf(`pass_%d`, i),
 			"nickname":    fmt.Sprintf(`name_%d`, i),
-			"create_time": gtime.Now(),
+			"create_time": "2018-10-24 10:00:00",
 		})
 	}
 	result, err := db.Insert(context.Background(), name, array.Slice())
-	gtest.Assert(err, nil)
+	gtest.AssertNil(err)
 
 	n, e := result.RowsAffected()
 	gtest.Assert(e, nil)
@@ -145,4 +146,28 @@ func dropTable(table string) {
 	`, table, table)); err != nil {
 		gtest.Fatal(err)
 	}
+}
+
+// createInsertAndGetIdTableForTest test for InsertAndGetId
+func createInsertAndGetIdTableForTest() (name string) {
+
+	if _, err := db.Exec(context.Background(), `
+IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='ip_to_id' and xtype='U')
+begin
+	CREATE TABLE [ip_to_id](
+		[id] [int] IDENTITY(1,1) NOT NULL,
+		[ip] [varchar](128) NULL,
+	 CONSTRAINT [PK_ip_to_id] PRIMARY KEY CLUSTERED 
+	(
+		[id] ASC
+	)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+	) ON [PRIMARY]
+end
+	`); err != nil {
+		gtest.Fatal(err)
+	}
+
+	db.Schema(db.GetConfig().Name)
+	name = "ip_to_id"
+	return
 }

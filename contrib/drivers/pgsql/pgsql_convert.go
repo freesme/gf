@@ -11,6 +11,8 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/lib/pq"
+
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/text/gregex"
@@ -19,7 +21,7 @@ import (
 )
 
 // ConvertValueForField converts value to database acceptable value.
-func (d *Driver) ConvertValueForField(ctx context.Context, fieldType string, fieldValue interface{}) (interface{}, error) {
+func (d *Driver) ConvertValueForField(ctx context.Context, fieldType string, fieldValue any) (any, error) {
 	if g.IsNil(fieldValue) {
 		return d.Core.ConvertValueForField(ctx, fieldType, fieldValue)
 	}
@@ -41,7 +43,7 @@ func (d *Driver) ConvertValueForField(ctx context.Context, fieldType string, fie
 }
 
 // CheckLocalTypeForField checks and returns corresponding local golang type for given db type.
-func (d *Driver) CheckLocalTypeForField(ctx context.Context, fieldType string, fieldValue interface{}) (gdb.LocalType, error) {
+func (d *Driver) CheckLocalTypeForField(ctx context.Context, fieldType string, fieldValue any) (gdb.LocalType, error) {
 	var typeName string
 	match, _ := gregex.MatchString(`(.+?)\((.+)\)`, fieldType)
 	if len(match) == 3 {
@@ -72,6 +74,10 @@ func (d *Driver) CheckLocalTypeForField(ctx context.Context, fieldType string, f
 		"_int8":
 		return gdb.LocalTypeInt64Slice, nil
 
+	case
+		"_varchar", "_text":
+		return gdb.LocalTypeStringSlice, nil
+
 	default:
 		return d.Core.CheckLocalTypeForField(ctx, fieldType, fieldValue)
 	}
@@ -80,7 +86,7 @@ func (d *Driver) CheckLocalTypeForField(ctx context.Context, fieldType string, f
 // ConvertValueForLocal converts value to local Golang type of value according field type name from database.
 // The parameter `fieldType` is in lower case, like:
 // `float(5,2)`, `unsigned double(5,2)`, `decimal(10,2)`, `char(45)`, `varchar(100)`, etc.
-func (d *Driver) ConvertValueForLocal(ctx context.Context, fieldType string, fieldValue interface{}) (interface{}, error) {
+func (d *Driver) ConvertValueForLocal(ctx context.Context, fieldType string, fieldValue any) (any, error) {
 	typeName, _ := gregex.ReplaceString(`\(.+\)`, "", fieldType)
 	typeName = strings.ToLower(typeName)
 	switch typeName {
@@ -115,6 +121,14 @@ func (d *Driver) ConvertValueForLocal(ctx context.Context, fieldType string, fie
 				},
 			),
 		), nil
+
+	// String slice.
+	case "_varchar", "_text":
+		var result = make(pq.StringArray, 0)
+		if err := result.Scan(fieldValue); err != nil {
+			return nil, err
+		}
+		return []string(result), nil
 
 	default:
 		return d.Core.ConvertValueForLocal(ctx, fieldType, fieldValue)

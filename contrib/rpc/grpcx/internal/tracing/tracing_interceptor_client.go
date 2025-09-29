@@ -18,15 +18,16 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
-	"github.com/gogf/gf/contrib/rpc/grpcx/v2/internal/grpcctx"
 	"github.com/gogf/gf/v2"
 	"github.com/gogf/gf/v2/net/gtrace"
 	"github.com/gogf/gf/v2/util/gconv"
+
+	"github.com/gogf/gf/contrib/rpc/grpcx/v2/internal/grpcctx"
 )
 
 // UnaryClientInterceptor returns a grpc.UnaryClientInterceptor suitable
 // for use in a grpc.Dial call.
-func UnaryClientInterceptor(ctx context.Context, method string, req, reply interface{},
+func UnaryClientInterceptor(ctx context.Context, method string, req, reply any,
 	cc *grpc.ClientConn, invoker grpc.UnaryInvoker, callOpts ...grpc.CallOption) error {
 	tracer := otel.GetTracerProvider().Tracer(
 		tracingInstrumentGrpcClient,

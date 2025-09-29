@@ -183,7 +183,7 @@ func (m *softTimeMaintainer) GetFieldNameAndTypeForDelete(
 	)
 }
 
-// getSoftFieldName retrieves and returns the field name of the table for possible key.
+// getSoftFieldNameAndType retrieves and returns the field name of the table for possible key.
 func (m *softTimeMaintainer) getSoftFieldNameAndType(
 	ctx context.Context,
 	schema string, table string, checkFiledNames []string,
@@ -195,7 +195,7 @@ func (m *softTimeMaintainer) getSoftFieldNameAndType(
 			schema, table, strings.Join(checkFiledNames, "_"),
 		)
 		cacheDuration = gcache.DurationNoExpire
-		cacheFunc     = func(ctx context.Context) (value interface{}, err error) {
+		cacheFunc     = func(ctx context.Context) (value any, err error) {
 			// Ignore the error from TableFields.
 			fieldsMap, err := m.TableFields(table, schema)
 			if err != nil {

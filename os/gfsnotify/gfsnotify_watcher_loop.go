@@ -8,10 +8,10 @@ package gfsnotify
 
 import (
 	"context"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
 
 	"github.com/gogf/gf/v2/container/glist"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
 )
 
@@ -29,7 +29,7 @@ func (w *Watcher) watchLoop() {
 				return
 			}
 			// filter the repeated event in custom duration.
-			var cacheFunc = func(ctx context.Context) (value interface{}, err error) {
+			var cacheFunc = func(ctx context.Context) (value any, err error) {
 				w.events.Push(&Event{
 					event:   ev,
 					Path:    ev.Name,

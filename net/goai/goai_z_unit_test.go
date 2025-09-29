@@ -266,9 +266,9 @@ func TestOpenApiV3_Add_AutoDetectIn(t *testing.T) {
 
 func TestOpenApiV3_CommonRequest(t *testing.T) {
 	type CommonRequest struct {
-		Code    int         `json:"code"    description:"Error code"`
-		Message string      `json:"message" description:"Error message"`
-		Data    interface{} `json:"data"    description:"Result data for certain request according API definition"`
+		Code    int    `json:"code"    description:"Error code"`
+		Message string `json:"message" description:"Error message"`
+		Data    any    `json:"data"    description:"Result data for certain request according API definition"`
 	}
 
 	type Req struct {
@@ -320,9 +320,9 @@ func TestOpenApiV3_CommonRequest(t *testing.T) {
 
 func TestOpenApiV3_CommonRequest_WithoutDataField_Setting(t *testing.T) {
 	type CommonRequest struct {
-		Code    int         `json:"code"    description:"Error code"`
-		Message string      `json:"message" description:"Error message"`
-		Data    interface{} `json:"data"    description:"Result data for certain request according API definition"`
+		Code    int    `json:"code"    description:"Error code"`
+		Message string `json:"message" description:"Error message"`
+		Data    any    `json:"data"    description:"Result data for certain request according API definition"`
 	}
 
 	type PutReq struct {
@@ -397,9 +397,9 @@ func TestOpenApiV3_CommonRequest_WithoutDataField_Setting(t *testing.T) {
 
 func TestOpenApiV3_CommonRequest_EmptyRequest(t *testing.T) {
 	type CommonRequest struct {
-		Code    int         `json:"code"    description:"Error code"`
-		Message string      `json:"message" description:"Error message"`
-		Data    interface{} `json:"data"    description:"Result data for certain request according API definition"`
+		Code    int    `json:"code"    description:"Error code"`
+		Message string `json:"message" description:"Error message"`
+		Data    any    `json:"data"    description:"Result data for certain request according API definition"`
 	}
 
 	type Req struct {
@@ -560,9 +560,9 @@ func TestOpenApiV3_CommonRequest_Files(t *testing.T) {
 
 func TestOpenApiV3_CommonResponse(t *testing.T) {
 	type CommonResponse struct {
-		Code    int         `json:"code"    description:"Error code"`
-		Message string      `json:"message" description:"Error message"`
-		Data    interface{} `json:"data"    description:"Result data for certain request according API definition"`
+		Code    int    `json:"code"    description:"Error code"`
+		Message string `json:"message" description:"Error message"`
+		Data    any    `json:"data"    description:"Result data for certain request according API definition"`
 	}
 
 	type Req struct {
@@ -619,9 +619,9 @@ func TestOpenApiV3_CommonResponse(t *testing.T) {
 
 func TestOpenApiV3_CommonResponse_WithoutDataField_Setting(t *testing.T) {
 	type CommonResponse struct {
-		Code    int         `json:"code"    description:"Error code"`
-		Message string      `json:"message" description:"Error message"`
-		Data    interface{} `json:"data"    description:"Result data for certain request according API definition"`
+		Code    int    `json:"code"    description:"Error code"`
+		Message string `json:"message" description:"Error message"`
+		Data    any    `json:"data"    description:"Result data for certain request according API definition"`
 	}
 
 	type Req struct {
@@ -673,9 +673,9 @@ func TestOpenApiV3_CommonResponse_WithoutDataField_Setting(t *testing.T) {
 
 func TestOpenApiV3_CommonResponse_EmptyResponse(t *testing.T) {
 	type CommonResponse struct {
-		Code    int         `json:"code"    description:"Error code"`
-		Message string      `json:"message" description:"Error message"`
-		Data    interface{} `json:"data"    description:"Result data for certain request according API definition"`
+		Code    int    `json:"code"    description:"Error code"`
+		Message string `json:"message" description:"Error message"`
+		Data    any    `json:"data"    description:"Result data for certain request according API definition"`
 	}
 
 	type Req struct {
@@ -1021,9 +1021,9 @@ func Test_Properties_In_Sequence(t *testing.T) {
 
 func TestOpenApiV3_Ignore_Parameter(t *testing.T) {
 	type CommonResponse struct {
-		Code    int         `json:"code"    description:"Error code"`
-		Message string      `json:"message" description:"Error message"`
-		Data    interface{} `json:"data"    description:"Result data for certain request according API definition"`
+		Code    int    `json:"code"    description:"Error code"`
+		Message string `json:"message" description:"Error message"`
+		Data    any    `json:"data"    description:"Result data for certain request according API definition"`
 	}
 	type ProductSearchReq struct {
 		gmeta.Meta `path:"/test" method:"get"`
@@ -1193,15 +1193,15 @@ func Test_NameFromJsonTag(t *testing.T) {
 
 func TestOpenApiV3_PathSecurity(t *testing.T) {
 	type CommonResponse struct {
-		Code    int         `json:"code"    description:"Error code"`
-		Message string      `json:"message" description:"Error message"`
-		Data    interface{} `json:"data"    description:"Result data for certain request according API definition"`
+		Code    int    `json:"code"    description:"Error code"`
+		Message string `json:"message" description:"Error message"`
+		Data    any    `json:"data"    description:"Result data for certain request according API definition"`
 	}
 
 	type Req struct {
 		gmeta.Meta `method:"PUT" security:"apiKey"` // 这里的apiKey要和openApi定义的key一致
-		Product    string                           `json:"product" v:"required" description:"Unique product key"`
-		Name       string                           `json:"name"    v:"required" description:"Instance name"`
+		Product    string                           `json:"product"           v:"required" description:"Unique product key"`
+		Name       string                           `json:"name"              v:"required" description:"Instance name"`
 	}
 	type Res struct{}
 
@@ -1297,7 +1297,7 @@ func Test_Enums(t *testing.T) {
 			req = new(Req)
 		)
 		err = gtag.SetGlobalEnums(gjson.MustEncodeString(g.Map{
-			"github.com/gogf/gf/v2/net/goai_test.Status": []interface{}{StatusA, StatusB},
+			"github.com/gogf/gf/v2/net/goai_test.Status": []any{StatusA, StatusB},
 		}))
 		t.AssertNil(err)
 
@@ -1343,5 +1343,37 @@ func Test_XExtension(t *testing.T) {
 		})
 		t.AssertNil(err)
 		t.Assert(oai.String(), gtest.DataContent("XExtension", "expect.json"))
+	})
+}
+
+func Test_ValidationRules(t *testing.T) {
+	type Req struct {
+		g.Meta  `path:"/rules" method:"POST" tags:"Rules" summary:"Validation rules."`
+		Name    string `v:"required|min-length:3|max-length:32#required|min|max" dc:"Name"`
+		Age     int    `v:"required|min:1|max:100" dc:"Age"`
+		Grade   int    `v:"between:1,12#please enter the correct grade." dc:"Grade"`
+		Address string `v:"length:3,64" dc:"Address"`
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err error
+			oai = goai.New()
+			req = new(Req)
+		)
+		err = oai.Add(goai.AddInput{
+			Object: req,
+		})
+		t.AssertNil(err)
+
+		schema := oai.Components.Schemas.Get("github.com.gogf.gf.v2.net.goai_test.Req").Value
+		t.Assert(schema.Properties.Get("Name").Value.MinLength, 3)
+		t.Assert(schema.Properties.Get("Name").Value.MaxLength, 32)
+		t.Assert(schema.Properties.Get("Age").Value.Min, 1.0)
+		t.Assert(schema.Properties.Get("Age").Value.Max, 100.0)
+		t.Assert(schema.Properties.Get("Grade").Value.Min, 1.0)
+		t.Assert(schema.Properties.Get("Grade").Value.Max, 12.0)
+		t.Assert(schema.Properties.Get("Address").Value.MinLength, 3)
+		t.Assert(schema.Properties.Get("Address").Value.MaxLength, 64)
 	})
 }

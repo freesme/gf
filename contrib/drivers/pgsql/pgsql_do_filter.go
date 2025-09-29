@@ -12,12 +12,13 @@ import (
 
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/text/gregex"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 // DoFilter deals with the sql string before commits it to underlying sql driver.
 func (d *Driver) DoFilter(
-	ctx context.Context, link gdb.Link, sql string, args []interface{},
-) (newSql string, newArgs []interface{}, err error) {
+	ctx context.Context, link gdb.Link, sql string, args []any,
+) (newSql string, newArgs []any, err error) {
 	var index int
 	// Convert placeholder char '?' to string "$x".
 	newSql, err = gregex.ReplaceStringFunc(`\?`, sql, func(s string) string {
@@ -45,6 +46,13 @@ func (d *Driver) DoFilter(
 	if err != nil {
 		return "", nil, err
 	}
+
+	// Add support for pgsql INSERT OR IGNORE.
+	if gstr.HasPrefix(newSql, gdb.InsertOperationIgnore) {
+		newSql = "INSERT" + newSql[len(gdb.InsertOperationIgnore):] + " ON CONFLICT DO NOTHING"
+	}
+
 	newArgs = args
+
 	return d.Core.DoFilter(ctx, link, newSql, newArgs)
 }
